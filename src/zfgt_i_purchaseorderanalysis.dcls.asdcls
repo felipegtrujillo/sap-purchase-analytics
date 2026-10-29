@@ -1,0 +1,6 @@
+@EndUserText.label: 'Access control for purchase order analysis'
+@MappingRole: true
+define role ZFGT_I_PURCHASEORDERANALYSIS {
+  grant select on ZFGT_I_PurchaseOrderAnalysis
+    where CompanyCode = '1000';
+}
