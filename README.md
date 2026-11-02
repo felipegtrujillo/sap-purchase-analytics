@@ -100,7 +100,7 @@ Median of 5 executions; each execution averages 20 measured runs per variant aft
 **How the measurement was validated**
 
 - A first run showed Open SQL slower than CDS; reversing the execution order removed the difference (noise on a shared system).
-- The first test harness copied the AMDP result into a different table type, a cost the other variants did not pay. A controlled side-by-side run with only that change isolated it at about 5 ms; the remaining AMDP overhead is real.
+- The first test harness copied the AMDP result into a different table type, a cost the other variants did not pay. A [controlled side-by-side run](https://github.com/felipegtrujillo/sap-purchase-analytics/commit/39eb81520cd09888e83ca0e8b55b4ad389136a5b) (original and corrected harness in the same commit, executed alternately) isolated it at about 5 ms; the remaining AMDP overhead is real.
 - Timings come from a shared trial system and vary between runs. They show orders of magnitude, not exact benchmarks.
 
 ## Known limitations
