@@ -1,0 +1,125 @@
+CLASS zcl_fgt_perf_cmp_fair DEFINITION
+  PUBLIC FINAL CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+
+  PRIVATE SECTION.
+    " Single result type, defined once in the AMDP class
+    TYPES tt_total TYPE zcl_fgt_amdp_totals=>tt_total.
+
+    CONSTANTS c_runs TYPE i VALUE 20.
+
+    METHODS via_abap_loop RETURNING VALUE(rt_totals) TYPE tt_total.
+    METHODS via_open_sql  RETURNING VALUE(rt_totals) TYPE tt_total.
+    METHODS via_cds       RETURNING VALUE(rt_totals) TYPE tt_total.
+    METHODS via_amdp      RETURNING VALUE(rt_totals) TYPE tt_total.
+
+    METHODS measure
+      IMPORTING iv_variant       TYPE string
+                io_out           TYPE REF TO if_oo_adt_classrun_out
+      RETURNING VALUE(rt_totals) TYPE tt_total.
+ENDCLASS.
+
+
+CLASS zcl_fgt_perf_cmp_fair IMPLEMENTATION.
+
+  METHOD if_oo_adt_classrun~main.
+    DATA(lt_loop) = measure( iv_variant = `ABAP LOOP` io_out = out ).
+    DATA(lt_sql)  = measure( iv_variant = `OPEN SQL`  io_out = out ).
+    DATA(lt_cds)  = measure( iv_variant = `CDS VIEW`  io_out = out ).
+    DATA(lt_amdp) = measure( iv_variant = `AMDP`      io_out = out ).
+
+    " Sort outside the measurement, only to compare results
+    SORT: lt_loop BY po_id currency_code,
+          lt_sql  BY po_id currency_code,
+          lt_cds  BY po_id currency_code,
+          lt_amdp BY po_id currency_code.
+
+    IF lt_loop = lt_sql AND lt_sql = lt_cds AND lt_cds = lt_amdp.
+      out->write( |Check FAIR version: all four results are identical ({ lines( lt_sql ) } totals).| ).
+    ELSE.
+      out->write( |Check  FAIR version FAILED: results differ. LOOP={ lines( lt_loop ) } | &&
+                  |SQL={ lines( lt_sql ) } CDS={ lines( lt_cds ) } AMDP={ lines( lt_amdp ) }| ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD measure.
+    DATA lv_start   TYPE utclong.
+    DATA lv_seconds TYPE decfloat34.
+
+    " One extra run as warm-up; it is not counted
+    DO c_runs + 1 TIMES.
+      DATA(lv_run) = sy-index.
+      lv_start = utclong_current( ).
+
+      CASE iv_variant.
+        WHEN `ABAP LOOP`. rt_totals = via_abap_loop( ).
+        WHEN `OPEN SQL`.  rt_totals = via_open_sql( ).
+        WHEN `CDS VIEW`.  rt_totals = via_cds( ).
+        WHEN `AMDP`.      rt_totals = via_amdp( ).
+      ENDCASE.
+
+      IF lv_run > 1.
+        lv_seconds = lv_seconds + utclong_diff( high = utclong_current( )
+                                                low  = lv_start ).
+      ENDIF.
+    ENDDO.
+
+    DATA(lv_avg_ms) = lv_seconds / c_runs * 1000.
+    io_out->write( |{ iv_variant WIDTH = 10 }: { lv_avg_ms DECIMALS = 1 } ms (avg of { c_runs } runs)| ).
+  ENDMETHOD.
+
+
+  METHOD via_abap_loop.
+    " Classic style: fetch every item, aggregate on the application server
+    DATA lt_collect TYPE HASHED TABLE OF zcl_fgt_amdp_totals=>ty_total
+                    WITH UNIQUE KEY po_id currency_code.
+    DATA ls_total   TYPE zcl_fgt_amdp_totals=>ty_total.
+
+    SELECT po_id, currency_code, net_amount
+      FROM zfgt_po_item
+      INTO TABLE @DATA(lt_items).
+
+    LOOP AT lt_items INTO DATA(ls_item).
+      ls_total = VALUE #( po_id         = ls_item-po_id
+                          currency_code = ls_item-currency_code
+                          total         = ls_item-net_amount
+                          items         = 1 ).
+      COLLECT ls_total INTO lt_collect.
+    ENDLOOP.
+
+    rt_totals = lt_collect.
+  ENDMETHOD.
+
+
+  METHOD via_open_sql.
+    " Code pushdown: the database aggregates, only totals travel back
+    SELECT po_id,
+           currency_code,
+           SUM( net_amount ) AS total,
+           COUNT(*)          AS items
+      FROM zfgt_po_item
+      GROUP BY po_id, currency_code
+      INTO CORRESPONDING FIELDS OF TABLE @rt_totals.
+  ENDMETHOD.
+
+
+  METHOD via_cds.
+    " Same pushdown, but the logic lives in a reusable CDS view
+    SELECT PurchaseOrder  AS po_id,
+           Currency       AS currency_code,
+           TotalNetAmount AS total,
+           NumberOfItems  AS items
+      FROM zfgt_i_purchaseordertotal
+      INTO CORRESPONDING FIELDS OF TABLE @rt_totals.
+  ENDMETHOD.
+
+
+  METHOD via_amdp.
+    " Same aggregation in native SQLScript; result type matches, no copy
+    zcl_fgt_amdp_totals=>get_totals( IMPORTING et_totals = rt_totals ).
+  ENDMETHOD.
+
+ENDCLASS.

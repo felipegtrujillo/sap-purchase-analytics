@@ -15,7 +15,7 @@ CLASS zcl_fgt_perf_comparison DEFINITION
       tt_total TYPE SORTED TABLE OF ty_total
                WITH UNIQUE KEY po_id currency_code.
 
-    CONSTANTS c_runs TYPE i VALUE 5.
+        CONSTANTS c_runs TYPE i VALUE 20.
 
     METHODS via_abap_loop RETURNING VALUE(rt_totals) TYPE tt_total.
     METHODS via_open_sql  RETURNING VALUE(rt_totals) TYPE tt_total.
