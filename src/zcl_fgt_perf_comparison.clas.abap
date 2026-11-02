@@ -1,21 +1,14 @@
-CLASS zcl_fgt_perf_comparison DEFINITION
+CLASS ZCL_FGT_PERF_COMPARISON DEFINITION
   PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES if_oo_adt_classrun.
 
   PRIVATE SECTION.
-    TYPES:
-      BEGIN OF ty_total,
-        po_id         TYPE zfgt_po_item-po_id,
-        currency_code TYPE zfgt_po_item-currency_code,
-        total         TYPE zfgt_po_item-net_amount,
-        items         TYPE i,
-      END OF ty_total,
-      tt_total TYPE SORTED TABLE OF ty_total
-               WITH UNIQUE KEY po_id currency_code.
+    " Single result type, defined once in the AMDP class
+    TYPES tt_total TYPE zcl_fgt_amdp_totals=>tt_total.
 
-        CONSTANTS c_runs TYPE i VALUE 20.
+    CONSTANTS c_runs TYPE i VALUE 20.
 
     METHODS via_abap_loop RETURNING VALUE(rt_totals) TYPE tt_total.
     METHODS via_open_sql  RETURNING VALUE(rt_totals) TYPE tt_total.
@@ -29,21 +22,25 @@ CLASS zcl_fgt_perf_comparison DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
+CLASS ZCL_FGT_PERF_COMPARISON IMPLEMENTATION.
 
   METHOD if_oo_adt_classrun~main.
     DATA(lt_loop) = measure( iv_variant = `ABAP LOOP` io_out = out ).
-    DATA(lt_cds)  = measure( iv_variant = `CDS VIEW`  io_out = out ).
     DATA(lt_sql)  = measure( iv_variant = `OPEN SQL`  io_out = out ).
-   DATA(lt_amdp) = measure( iv_variant = `AMDP`      io_out = out ).
+    DATA(lt_cds)  = measure( iv_variant = `CDS VIEW`  io_out = out ).
+    DATA(lt_amdp) = measure( iv_variant = `AMDP`      io_out = out ).
 
-
+    " Sort outside the measurement, only to compare results
+    SORT: lt_loop BY po_id currency_code,
+          lt_sql  BY po_id currency_code,
+          lt_cds  BY po_id currency_code,
+          lt_amdp BY po_id currency_code.
 
     IF lt_loop = lt_sql AND lt_sql = lt_cds AND lt_cds = lt_amdp.
-      out->write( |Check: all three results are identical ({ lines( lt_sql ) } totals).| ).
+      out->write( |Check version: all four results are identical ({ lines( lt_sql ) } totals).| ).
     ELSE.
-      out->write( |Check FAILED: results differ. LOOP={ lines( lt_loop ) } | &&
-                  |SQL={ lines( lt_sql ) } CDS={ lines( lt_cds ) } AMDP={ lines( lt_amdp ) } | ).
+      out->write( |Check version FAILED: results differ. LOOP={ lines( lt_loop ) } | &&
+                  |SQL={ lines( lt_sql ) } CDS={ lines( lt_cds ) } AMDP={ lines( lt_amdp ) }| ).
     ENDIF.
   ENDMETHOD.
 
@@ -62,7 +59,6 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
         WHEN `OPEN SQL`.  rt_totals = via_open_sql( ).
         WHEN `CDS VIEW`.  rt_totals = via_cds( ).
         WHEN `AMDP`.      rt_totals = via_amdp( ).
-
       ENDCASE.
 
       IF lv_run > 1.
@@ -78,22 +74,23 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
 
   METHOD via_abap_loop.
     " Classic style: fetch every item, aggregate on the application server
+    DATA lt_collect TYPE HASHED TABLE OF zcl_fgt_amdp_totals=>ty_total
+                    WITH UNIQUE KEY po_id currency_code.
+    DATA ls_total   TYPE zcl_fgt_amdp_totals=>ty_total.
+
     SELECT po_id, currency_code, net_amount
       FROM zfgt_po_item
       INTO TABLE @DATA(lt_items).
 
     LOOP AT lt_items INTO DATA(ls_item).
-      READ TABLE rt_totals ASSIGNING FIELD-SYMBOL(<ls_total>)
-           WITH TABLE KEY po_id         = ls_item-po_id
-                          currency_code = ls_item-currency_code.
-      IF sy-subrc <> 0.
-        INSERT VALUE #( po_id         = ls_item-po_id
-                        currency_code = ls_item-currency_code )
-               INTO TABLE rt_totals ASSIGNING <ls_total>.
-      ENDIF.
-      <ls_total>-total = <ls_total>-total + ls_item-net_amount.
-      <ls_total>-items = <ls_total>-items + 1.
+      ls_total = VALUE #( po_id         = ls_item-po_id
+                          currency_code = ls_item-currency_code
+                          total         = ls_item-net_amount
+                          items         = 1 ).
+      COLLECT ls_total INTO lt_collect.
     ENDLOOP.
+
+    rt_totals = lt_collect.
   ENDMETHOD.
 
 
@@ -119,10 +116,10 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE @rt_totals.
   ENDMETHOD.
 
+
   METHOD via_amdp.
-    " Same aggregation, written in native SQLScript
-    zcl_fgt_amdp_totals=>get_totals( IMPORTING et_totals = DATA(lt_totals) ).
-    rt_totals = CORRESPONDING #( lt_totals ).
+    " Same aggregation in native SQLScript; result type matches, no copy
+    zcl_fgt_amdp_totals=>get_totals( IMPORTING et_totals = rt_totals ).
   ENDMETHOD.
 
 ENDCLASS.
