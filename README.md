@@ -32,7 +32,7 @@ Solid boxes up to the composite layer are implemented; the consumption layer, se
 |-------|-------|--------|
 | A | Database tables and reproducible test data generator | ✅ Done |
 | B | Layered CDS view model (basic and composite views, associations, aggregations, access control) | ✅ Done |
-| C | Performance comparison: ABAP loop vs Open SQL vs CDS (AMDP and ABAP Unit tests next) | 🔄 In progress |
+| C | Performance comparison: ABAP loop vs Open SQL vs CDS vs AMDP (ABAP Unit tests next) | 🔄 In progress |
 | D | Consumption view, OData V4 service and Fiori UI | ⏳ Planned |
 | E | RAP business object (behavior definition and implementation) | ⏳ Planned |
 
@@ -79,20 +79,28 @@ Access control: `ZFGT_I_PurchaseOrderAnalysis` is protected by a DCL role that r
 
 ## Performance comparison
 
-`ZCL_FGT_PERF_COMPARISON` calculates the same result (total and item count per order over ~160,000 items) in three ways, measures each one and checks that all results are identical.
+`ZCL_FGT_PERF_COMPARISON` calculates the same result (total and item count per order over ~160,000 items) in four ways, measures each one and checks that all four results are identical.
 
-| Variant | Run 1 | Run 2 (order reversed) |
-|---------|-------|------------------------|
-| ABAP loop (fetch all items, aggregate on the application server) | 319.7 ms | 330.1 ms |
-| Open SQL (`SUM` / `GROUP BY` pushed down to HANA) | 26.1 ms | 16.3 ms |
-| CDS view (`ZFGT_I_PurchaseOrderTotal`) | 17.0 ms | 17.2 ms |
+| Variant | How it works | Median time |
+|---------|--------------|-------------|
+| ABAP loop | Fetch all items, aggregate on the application server (hashed table + `COLLECT`) | 162 ms |
+| Open SQL | `SUM` / `GROUP BY` pushed down to HANA | 12 ms |
+| CDS view | Reads `ZFGT_I_PurchaseOrderTotal` | 13 ms |
+| AMDP | Same aggregation as a SQLScript database procedure (`ZCL_FGT_AMDP_TOTALS`) | 38 ms |
 
-Average of 5 runs per variant, after one unmeasured warm-up run. All three variants returned the same 20,000 totals.
+Median of 5 executions; each execution averages 20 measured runs per variant after one unmeasured warm-up run. All four variants returned the same 20,000 totals.
 
 **Findings**
 
-- Pushing the aggregation down to HANA was **about 20× faster** than aggregating in an ABAP loop. The cost of the loop is mainly transferring every row to the application server.
-- **Open SQL and CDS performed the same.** The 26.1 ms in run 1 was an outlier: reversing the execution order removed the difference. A CDS view does not make an equivalent query faster; its value is reusable, semantic logic that can be exposed to services and UIs.
+- **Code pushdown wins clearly.** Even with an optimized loop, aggregating in HANA (Open SQL or CDS) was about **13× faster** than aggregating in ABAP. The cost of the loop is mainly transferring every row to the application server.
+- **Open SQL and CDS performed the same.** A CDS view does not make an equivalent query faster; its value is reusable, semantic logic that can be exposed to services and UIs.
+- **AMDP was consistently ~25 ms slower** than Open SQL and CDS: the fixed cost of calling a database procedure. For logic that Open SQL or CDS can express, AMDP adds complexity without a performance benefit. It is the right tool only when the logic cannot be expressed there.
+- **The internal table type matters.** The first version of the loop used `READ TABLE` + `INSERT` on a sorted table (median 323 ms). Switching to `COLLECT` on a hashed table halved the time with the same algorithm.
+
+**How the measurement was validated**
+
+- A first run showed Open SQL slower than CDS; reversing the execution order removed the difference (noise on a shared system).
+- The first test harness copied the AMDP result into a different table type, a cost the other variants did not pay. A controlled side-by-side run with only that change isolated it at about 5 ms; the remaining AMDP overhead is real.
 - Timings come from a shared trial system and vary between runs. They show orders of magnitude, not exact benchmarks.
 
 ## Known limitations
@@ -107,6 +115,7 @@ Average of 5 runs per variant, after one unmeasured warm-up run. All three varia
 - ABAP Cloud (ABAP for Cloud Development language version)
 - Eclipse with ABAP Development Tools (ADT)
 - Core Data Services (CDS view entities, DCL)
+- AMDP (SQLScript)
 - abapGit for version control
 - Planned: OData V4, SAP Fiori, RESTful Application Programming Model (RAP)
 
