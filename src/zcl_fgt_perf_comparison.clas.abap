@@ -20,6 +20,7 @@ CLASS zcl_fgt_perf_comparison DEFINITION
     METHODS via_abap_loop RETURNING VALUE(rt_totals) TYPE tt_total.
     METHODS via_open_sql  RETURNING VALUE(rt_totals) TYPE tt_total.
     METHODS via_cds       RETURNING VALUE(rt_totals) TYPE tt_total.
+    METHODS via_amdp      RETURNING VALUE(rt_totals) TYPE tt_total.
 
     METHODS measure
       IMPORTING iv_variant       TYPE string
@@ -34,13 +35,15 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
     DATA(lt_loop) = measure( iv_variant = `ABAP LOOP` io_out = out ).
     DATA(lt_cds)  = measure( iv_variant = `CDS VIEW`  io_out = out ).
     DATA(lt_sql)  = measure( iv_variant = `OPEN SQL`  io_out = out ).
+   DATA(lt_amdp) = measure( iv_variant = `AMDP`      io_out = out ).
 
 
-    IF lt_loop = lt_sql AND lt_sql = lt_cds.
+
+    IF lt_loop = lt_sql AND lt_sql = lt_cds AND lt_cds = lt_amdp.
       out->write( |Check: all three results are identical ({ lines( lt_sql ) } totals).| ).
     ELSE.
       out->write( |Check FAILED: results differ. LOOP={ lines( lt_loop ) } | &&
-                  |SQL={ lines( lt_sql ) } CDS={ lines( lt_cds ) }| ).
+                  |SQL={ lines( lt_sql ) } CDS={ lines( lt_cds ) } AMDP={ lines( lt_amdp ) } | ).
     ENDIF.
   ENDMETHOD.
 
@@ -58,6 +61,8 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
         WHEN `ABAP LOOP`. rt_totals = via_abap_loop( ).
         WHEN `OPEN SQL`.  rt_totals = via_open_sql( ).
         WHEN `CDS VIEW`.  rt_totals = via_cds( ).
+        WHEN `AMDP`.      rt_totals = via_amdp( ).
+
       ENDCASE.
 
       IF lv_run > 1.
@@ -112,6 +117,12 @@ CLASS zcl_fgt_perf_comparison IMPLEMENTATION.
            NumberOfItems  AS items
       FROM zfgt_i_purchaseordertotal
       INTO CORRESPONDING FIELDS OF TABLE @rt_totals.
+  ENDMETHOD.
+
+  METHOD via_amdp.
+    " Same aggregation, written in native SQLScript
+    zcl_fgt_amdp_totals=>get_totals( IMPORTING et_totals = DATA(lt_totals) ).
+    rt_totals = CORRESPONDING #( lt_totals ).
   ENDMETHOD.
 
 ENDCLASS.
