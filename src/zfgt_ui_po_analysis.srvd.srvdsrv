@@ -1,0 +1,4 @@
+@EndUserText.label: 'Purchase order analysis service'
+define service ZFGT_UI_PO_ANALYSIS {
+  expose ZFGT_C_PurchaseOrderAnalysis as PurchaseOrder;
+}
