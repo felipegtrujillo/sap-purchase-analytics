@@ -1,0 +1,6 @@
+@EndUserText.label: 'Access control for PO analysis (consumption)'
+@MappingRole: true
+define role ZFGT_C_PURCHASEORDERANALYSIS {
+  grant select on ZFGT_C_PurchaseOrderAnalysis
+    where inheriting conditions from entity ZFGT_I_PurchaseOrderAnalysis;
+}

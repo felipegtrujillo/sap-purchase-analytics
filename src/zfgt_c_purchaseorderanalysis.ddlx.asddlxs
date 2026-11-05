@@ -1,0 +1,57 @@
+@Metadata.layer: #CORE
+@UI.headerInfo: {
+  typeName:       'Purchase Order',
+  typeNamePlural: 'Purchase Orders',
+  title:          { type: #STANDARD, value: 'PurchaseOrder' },
+  description:    { type: #STANDARD, value: 'SupplierName' }
+}
+annotate entity ZFGT_C_PurchaseOrderAnalysis with
+{
+  @UI.facet: [ { id:       'General',
+                 purpose:  #STANDARD,
+                 type:     #IDENTIFICATION_REFERENCE,
+                 label:    'General Information',
+                 position: 10 } ]
+
+  @UI: { lineItem:       [ { position: 10 } ],
+         selectionField: [ { position: 10 } ],
+         identification: [ { position: 10 } ] }
+  PurchaseOrder;
+
+  @UI: { lineItem:       [ { position: 20 } ],
+         selectionField: [ { position: 20 } ],
+         identification: [ { position: 20 } ] }
+  Supplier;
+
+  @UI: { lineItem:       [ { position: 30 } ],
+         identification: [ { position: 30 } ] }
+  SupplierName;
+
+  @UI: { identification: [ { position: 40 } ] }
+  SupplierCountry;
+
+  @UI: { lineItem:       [ { position: 40 } ],
+         selectionField: [ { position: 30 } ],
+         identification: [ { position: 50 } ] }
+  DocumentDate;
+
+  @UI: { lineItem:       [ { position: 50 } ],
+         selectionField: [ { position: 40 } ],
+         identification: [ { position: 60 } ] }
+  StatusText;
+
+  @UI: { lineItem:       [ { position: 60 } ],
+         identification: [ { position: 70 } ] }
+  TotalNetAmount;
+
+  @UI: { lineItem:       [ { position: 70 } ],
+         identification: [ { position: 80 } ] }
+  NumberOfItems;
+
+  @UI: { selectionField: [ { position: 50 } ],
+         identification: [ { position: 90 } ] }
+  CompanyCode;
+
+  @UI: { identification: [ { position: 100 } ] }
+  PurchasingOrganization;
+}
