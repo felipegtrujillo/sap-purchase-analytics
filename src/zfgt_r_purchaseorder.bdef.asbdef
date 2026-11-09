@@ -1,0 +1,62 @@
+managed implementation in class zbp_fgt_r_purchaseorder unique;
+strict ( 2 );
+
+define behavior for ZFGT_R_PurchaseOrder alias PurchaseOrder
+persistent table zfgt_po_head
+lock master
+authorization master ( global )
+etag master LocalLastChangedAt
+{
+  create;
+  update;
+  delete;
+  association _Item { create; }
+
+  field ( readonly ) CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
+  field ( mandatory : create, readonly : update ) PurchaseOrder;
+  field ( mandatory ) Supplier, CompanyCode, Currency, DocumentDate;
+
+  mapping for zfgt_po_head
+  {
+    PurchaseOrder          = po_id;
+    Supplier               = supplier_id;
+    CompanyCode            = company_code;
+    PurchasingOrganization = purch_org;
+    DocumentDate           = doc_date;
+    Currency               = currency_code;
+    Status                 = status;
+    CreatedBy              = created_by;
+    CreatedAt              = created_at;
+    LastChangedBy          = last_changed_by;
+    LastChangedAt          = last_changed_at;
+    LocalLastChangedAt     = local_last_changed_at;
+  }
+}
+
+define behavior for ZFGT_R_PurchaseOrderItem alias PurchaseOrderItem
+persistent table zfgt_po_item
+lock dependent by _PurchaseOrder
+authorization dependent by _PurchaseOrder
+etag dependent by _PurchaseOrder
+{
+  update;
+  delete;
+  association _PurchaseOrder;
+
+  field ( readonly ) PurchaseOrder;
+  field ( mandatory : create, readonly : update ) PurchaseOrderItem;
+
+  mapping for zfgt_po_item
+  {
+    PurchaseOrder     = po_id;
+    PurchaseOrderItem = item_no;
+    Material          = material_id;
+    Plant             = plant;
+    OrderQuantity     = quantity;
+    OrderQuantityUnit = order_unit;
+    NetPrice          = net_price;
+    NetAmount         = net_amount;
+    Currency          = currency_code;
+    DeliveryDate      = delivery_date;
+  }
+}
