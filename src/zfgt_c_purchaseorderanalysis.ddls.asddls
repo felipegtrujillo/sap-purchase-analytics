@@ -4,6 +4,8 @@
 @Search.searchable: true
 define view entity ZFGT_C_PurchaseOrderAnalysis
   as select from ZFGT_I_PurchaseOrderAnalysis
+   association [0..*] to ZFGT_C_PurchaseOrderItem as _Item
+    on $projection.PurchaseOrder = _Item.PurchaseOrder
 {
       @EndUserText.label: 'Purchase Order'
       @Search.defaultSearchElement: true
@@ -41,5 +43,7 @@ define view entity ZFGT_C_PurchaseOrderAnalysis
       TotalNetAmount,
 
       @EndUserText.label: 'Items'
-      NumberOfItems
+      NumberOfItems,
+         /* Associations */
+      _Item
 }

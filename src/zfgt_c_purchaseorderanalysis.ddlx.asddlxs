@@ -11,7 +11,13 @@ annotate entity ZFGT_C_PurchaseOrderAnalysis with
                  purpose:  #STANDARD,
                  type:     #IDENTIFICATION_REFERENCE,
                  label:    'General Information',
-                 position: 10 } ]
+                 position: 10 },
+               { id:            'Items',
+                 purpose:       #STANDARD,
+                 type:          #LINEITEM_REFERENCE,
+                 label:         'Items',
+                 position:      20,
+                 targetElement: '_Item' } ]
 
   @UI: { lineItem:       [ { position: 10 } ],
          selectionField: [ { position: 10 } ],

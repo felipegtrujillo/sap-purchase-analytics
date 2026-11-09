@@ -1,0 +1,6 @@
+@EndUserText.label: 'Access control for PO items (consumption)'
+@MappingRole: true
+define role ZFGT_C_PURCHASEORDERITEM {
+  grant select on ZFGT_C_PurchaseOrderItem
+    where _PurchaseOrder.CompanyCode = '1000';
+}
