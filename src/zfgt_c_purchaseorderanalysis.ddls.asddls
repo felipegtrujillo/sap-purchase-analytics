@@ -12,11 +12,16 @@ define view entity ZFGT_C_PurchaseOrderAnalysis
   key PurchaseOrder,
 
       @EndUserText.label: 'Supplier'
+      @Consumption.valueHelpDefinition: [ { entity: { name:    'ZFGT_C_SupplierVH',
+                                                      element: 'Supplier' } } ]
+      @ObjectModel.text.element: [ 'SupplierName' ]
       Supplier,
 
       @EndUserText.label: 'Supplier Name'
       @Search.defaultSearchElement: true
       SupplierName,
+      
+      
 
       @EndUserText.label: 'Supplier Country'
       SupplierCountry,

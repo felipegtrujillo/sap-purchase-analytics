@@ -7,7 +7,12 @@
 }
 annotate entity ZFGT_C_PurchaseOrderAnalysis with
 {
-  @UI.facet: [ { id:       'General',
+  @UI.facet: [{ id:              'HeaderTotal',
+                 purpose:         #HEADER,
+                 type:            #DATAPOINT_REFERENCE,
+                 targetQualifier: 'TotalNetAmount',
+                 position:        10 },
+               { id:       'General',
                  purpose:  #STANDARD,
                  type:     #IDENTIFICATION_REFERENCE,
                  label:    'General Information',
@@ -24,13 +29,13 @@ annotate entity ZFGT_C_PurchaseOrderAnalysis with
          identification: [ { position: 10 } ] }
   PurchaseOrder;
 
-  @UI: { lineItem:       [ { position: 20 } ],
-         selectionField: [ { position: 20 } ],
-         identification: [ { position: 20 } ] }
+  @UI: { lineItem:        [ { position: 20 } ],
+         selectionField:  [ { position: 20 } ],
+         identification:  [ { position: 20 } ],
+         textArrangement: #TEXT_FIRST }
   Supplier;
 
-  @UI: { lineItem:       [ { position: 30 } ],
-         identification: [ { position: 30 } ] }
+  @UI: { identification: [ { position: 30 } ] }
   SupplierName;
 
   @UI: { identification: [ { position: 40 } ] }
@@ -47,7 +52,9 @@ annotate entity ZFGT_C_PurchaseOrderAnalysis with
   StatusText;
 
   @UI: { lineItem:       [ { position: 60 } ],
-         identification: [ { position: 70 } ] }
+         identification: [ { position: 70 } ],
+         dataPoint:      { qualifier: 'TotalNetAmount',
+                           title:     'Total Net Amount' } }
   TotalNetAmount;
 
   @UI: { lineItem:       [ { position: 70 } ],
