@@ -23,6 +23,7 @@ annotate entity ZFGT_C_PurchaseOrderAnalysis with
                  label:         'Items',
                  position:      20,
                  targetElement: '_Item' } ]
+                 
 
   @UI: { lineItem:       [ { position: 10 } ],
          selectionField: [ { position: 10 } ],

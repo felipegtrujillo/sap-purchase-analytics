@@ -18,7 +18,9 @@ CLASS zcl_fgt_test_po_total DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_fgt_test_po_total IMPLEMENTATION.
+
+CLASS ZCL_FGT_TEST_PO_TOTAL IMPLEMENTATION.
+
 
   METHOD class_setup.
     " Replace the view's data sources with test doubles
@@ -117,5 +119,4 @@ CLASS zcl_fgt_test_po_total IMPLEMENTATION.
       act = lt_totals[ 2 ]-TotalNetAmount
       msg = 'USD total must not include EUR amounts' ).
   ENDMETHOD.
-
 ENDCLASS.

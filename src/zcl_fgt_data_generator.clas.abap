@@ -47,7 +47,9 @@ CLASS zcl_fgt_data_generator DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_fgt_data_generator IMPLEMENTATION.
+
+CLASS ZCL_FGT_DATA_GENERATOR IMPLEMENTATION.
+
 
   METHOD if_oo_adt_classrun~main.
     mo_random = cl_abap_random_int=>create( seed = c_seed
@@ -214,5 +216,4 @@ CLASS zcl_fgt_data_generator IMPLEMENTATION.
       ENDDO.
     ENDDO.
   ENDMETHOD.
-
 ENDCLASS.

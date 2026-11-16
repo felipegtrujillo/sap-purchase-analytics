@@ -18,7 +18,9 @@ CLASS zcl_fgt_amdp_totals DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_fgt_amdp_totals IMPLEMENTATION.
+
+CLASS ZCL_FGT_AMDP_TOTALS IMPLEMENTATION.
+
 
   METHOD get_totals BY DATABASE PROCEDURE
                     FOR HDB
@@ -34,5 +36,4 @@ CLASS zcl_fgt_amdp_totals IMPLEMENTATION.
                  GROUP BY po_id, currency_code;
 
   ENDMETHOD.
-
 ENDCLASS.

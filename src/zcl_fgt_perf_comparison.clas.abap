@@ -22,7 +22,9 @@ CLASS ZCL_FGT_PERF_COMPARISON DEFINITION
 ENDCLASS.
 
 
+
 CLASS ZCL_FGT_PERF_COMPARISON IMPLEMENTATION.
+
 
   METHOD if_oo_adt_classrun~main.
     DATA(lt_loop) = measure( iv_variant = `ABAP LOOP` io_out = out ).
@@ -121,5 +123,4 @@ CLASS ZCL_FGT_PERF_COMPARISON IMPLEMENTATION.
     " Same aggregation in native SQLScript; result type matches, no copy
     zcl_fgt_amdp_totals=>get_totals( IMPORTING et_totals = rt_totals ).
   ENDMETHOD.
-
 ENDCLASS.

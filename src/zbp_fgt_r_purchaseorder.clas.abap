@@ -3,5 +3,7 @@ CLASS zbp_fgt_r_purchaseorder DEFINITION
   FOR BEHAVIOR OF zfgt_r_purchaseorder.
 ENDCLASS.
 
-CLASS zbp_fgt_r_purchaseorder IMPLEMENTATION.
+
+
+CLASS ZBP_FGT_R_PURCHASEORDER IMPLEMENTATION.
 ENDCLASS.
