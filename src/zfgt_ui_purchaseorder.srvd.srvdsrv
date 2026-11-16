@@ -1,0 +1,5 @@
+@EndUserText.label: 'Manage purchase orders service'
+define service ZFGT_UI_PURCHASEORDER {
+  expose ZFGT_C_PurchaseOrderTP     as PurchaseOrder;
+  expose ZFGT_C_PurchaseOrderItemTP as PurchaseOrderItem;
+}

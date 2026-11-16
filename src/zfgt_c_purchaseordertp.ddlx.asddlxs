@@ -1,0 +1,71 @@
+@Metadata.layer: #CORE
+@UI.headerInfo: {
+  typeName:       'Purchase Order',
+  typeNamePlural: 'Purchase Orders',
+  title:          { type: #STANDARD, value: 'PurchaseOrder' },
+  description:    { type: #STANDARD, value: 'Supplier' }
+}
+annotate entity ZFGT_C_PurchaseOrderTP with
+{
+  @UI.facet: [ { id:       'General',
+                 purpose:  #STANDARD,
+                 type:     #IDENTIFICATION_REFERENCE,
+                 label:    'General Information',
+                 position: 10 },
+               { id:            'Items',
+                 purpose:       #STANDARD,
+                 type:          #LINEITEM_REFERENCE,
+                 label:         'Items',
+                 position:      20,
+                 targetElement: '_Item' },
+               { id:              'Admin',
+                 purpose:         #STANDARD,
+                 type:            #FIELDGROUP_REFERENCE,
+                 targetQualifier: 'Admin',
+                 label:           'Administrative Data',
+                 position:        30 } ]
+
+  @UI: { lineItem:       [ { position: 10 } ],
+         selectionField: [ { position: 10 } ],
+         identification: [ { position: 10 } ] }
+  PurchaseOrder;
+
+  @UI: { lineItem:       [ { position: 20 } ],
+         selectionField: [ { position: 20 } ],
+         identification: [ { position: 20 } ] }
+  Supplier;
+
+  @UI: { lineItem:       [ { position: 30 } ],
+         selectionField: [ { position: 30 } ],
+         identification: [ { position: 30 } ] }
+  CompanyCode;
+
+  @UI: { identification: [ { position: 40 } ] }
+  PurchasingOrganization;
+
+  @UI: { lineItem:       [ { position: 40 } ],
+         selectionField: [ { position: 40 } ],
+         identification: [ { position: 50 } ] }
+  DocumentDate;
+
+  @UI: { lineItem:       [ { position: 50 } ],
+         identification: [ { position: 60 } ] }
+  Currency;
+
+  @UI: { lineItem:       [ { position: 60 } ],
+         selectionField: [ { position: 50 } ],
+         identification: [ { position: 70 } ] }
+  Status;
+
+  @UI.fieldGroup: [ { qualifier: 'Admin', position: 10 } ]
+  CreatedBy;
+
+  @UI.fieldGroup: [ { qualifier: 'Admin', position: 20 } ]
+  CreatedAt;
+
+  @UI.fieldGroup: [ { qualifier: 'Admin', position: 30 } ]
+  LastChangedBy;
+
+  @UI.fieldGroup: [ { qualifier: 'Admin', position: 40 } ]
+  LastChangedAt;
+}

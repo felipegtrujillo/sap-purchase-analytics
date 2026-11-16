@@ -7,10 +7,11 @@ ENDCLASS.
 
 CLASS lhc_purchaseorder IMPLEMENTATION.
   METHOD get_global_authorizations.
-    " Everyone may create, update and delete for now.
+    " Everyone may create, update, delete and edit for now.
     " Real authorization checks come later.
-    result = VALUE #( %create = if_abap_behv=>auth-allowed
-                      %update = if_abap_behv=>auth-allowed
-                      %delete = if_abap_behv=>auth-allowed ).
+    result = VALUE #( %create      = if_abap_behv=>auth-allowed
+                      %update      = if_abap_behv=>auth-allowed
+                      %delete      = if_abap_behv=>auth-allowed
+                      %action-Edit = if_abap_behv=>auth-allowed ).
   ENDMETHOD.
 ENDCLASS.

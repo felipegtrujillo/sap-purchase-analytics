@@ -1,16 +1,25 @@
 managed implementation in class zbp_fgt_r_purchaseorder unique;
 strict ( 2 );
+with draft;
 
 define behavior for ZFGT_R_PurchaseOrder alias PurchaseOrder
 persistent table zfgt_po_head
+draft table zfgt_po_head_d
 lock master
+total etag LastChangedAt
 authorization master ( global )
 etag master LocalLastChangedAt
 {
   create;
   update;
   delete;
-  association _Item { create; }
+  association _Item { create; with draft; }
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
 
   field ( readonly ) CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
   field ( mandatory : create, readonly : update ) PurchaseOrder;
@@ -35,13 +44,14 @@ etag master LocalLastChangedAt
 
 define behavior for ZFGT_R_PurchaseOrderItem alias PurchaseOrderItem
 persistent table zfgt_po_item
+draft table zfgt_po_item_d
 lock dependent by _PurchaseOrder
 authorization dependent by _PurchaseOrder
 etag dependent by _PurchaseOrder
 {
   update;
   delete;
-  association _PurchaseOrder;
+  association _PurchaseOrder { with draft; }
 
   field ( readonly ) PurchaseOrder;
   field ( mandatory : create, readonly : update ) PurchaseOrderItem;
